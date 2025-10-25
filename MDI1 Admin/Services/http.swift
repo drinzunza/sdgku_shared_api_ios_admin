@@ -94,6 +94,7 @@ struct Http {
         if authKey == nil {
             throw APIError.invalidAuthKey
         }
+        print("authKey: \(authKey!)")
         
         let domain = UserDefaults.standard.string(forKey:"serverURL")! + endpoint
         

@@ -6,11 +6,13 @@ struct CreateSheet: View {
     let inputPlaceholder: String
     let multiline: Bool
     let okText: String
+    let errorMessage: String?
+    let isLoading: Bool
+    let loadingMessage: String
     let onConfirm: (String) -> Void
     let onCancel: () -> Void
     
-    
-    @State var inputText: String = ""
+    @State var inputText: String = ""    
     
     init(
         title: String,
@@ -18,6 +20,9 @@ struct CreateSheet: View {
         inputPlaceholder: String = "",
         okText: String = "Ok",
         multiline: Bool = false, // ✅ default is optional
+        isLoading: Bool = false, // loading message is shown when set to true
+        loadingMessage: String = "Loading...",
+        errorMessage: String? = nil, // error is shown when not nil
         onConfirm: @escaping (String) -> Void,
         onCancel: @escaping () -> Void
     ) {
@@ -26,45 +31,69 @@ struct CreateSheet: View {
         self.inputPlaceholder = inputPlaceholder
         self.multiline = multiline
         self.okText = okText
+        self.isLoading = isLoading
+        self.loadingMessage = loadingMessage
+        self.errorMessage = errorMessage
         self.onConfirm = onConfirm
         self.onCancel = onCancel
     }
     
     
     var body: some View {
-        VStack(spacing: 12) {
-            Text(self.title)
-                .font(.headline)
-            
-            Text(self.subTitle)
-                .font(.footnote)
-            
-            if !multiline {
-                TextField(self.inputPlaceholder, text: $inputText)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal, 16)
-            } else {
-                TextEditor(text: $inputText)
-                    .frame(minHeight: 140)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.gray.opacity(0.3))
-                    )
-                    .padding(.horizontal, 16)
-            }
-            
-            HStack(spacing: 16) {
-                Button(okText) {
-                    onConfirm(self.inputText)
+        NavigationStack {
+            Form {
+                Section(header: Text(self.subTitle)) {
+                                        
+                    if !multiline {
+                        TextField(self.inputPlaceholder, text: $inputText)
+                            .textFieldStyle(.roundedBorder)
+                            .padding(.horizontal, 0)
+                    } else {
+                        TextEditor(text: $inputText)
+                            .frame(minHeight: 180)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.3))
+                            )
+                            .padding(.horizontal, 0)
+                    }
                 }
-                    .buttonStyle(.borderedProminent)
                 
-                Button("Cancel", action:onCancel)
+                if let error = errorMessage {
+                    Section {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                    }
+                }
+            }
+            .navigationTitle(self.title)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: onCancel)
                     .buttonStyle(.bordered)
+                    .frame(width: 100)
+                    .disabled(isLoading)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(self.okText) {
+                            onConfirm(self.inputText)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .frame(minWidth: 100)
+                    .disabled(self.inputText.isEmpty || isLoading)
+                }
+            }
+            .overlay {
+                if isLoading {
+                    ProgressView("Saving data...")
+                        .padding()
+                        .background(Color(.lightGray))
+                        .cornerRadius(10)
+                        .shadow(radius: 10)
+                }
             }
         }
-        .padding(.vertical, 16)
-        .fixedSize(horizontal: false, vertical: true)
     }
 }
     

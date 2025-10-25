@@ -87,7 +87,7 @@ struct StudentDetails: View {
                                     self.addVisible = false
                                 }
                             )
-                            .presentationDetents([.height(160)])
+                            .presentationDetents([.height(260)])
                             .presentationDragIndicator(.visible)
                         }
                     }

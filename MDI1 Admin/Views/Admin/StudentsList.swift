@@ -50,7 +50,9 @@ struct StudentsList: View {
                     .listStyle(.plain)
                     .padding(10)
                     .refreshable {
-                        await fetchStudents()
+                        Task {
+                            await fetchStudents()
+                        }
                     }
                 }
             }
@@ -65,21 +67,25 @@ struct StudentsList: View {
                     .sheet(isPresented: $addVisible) {
                         CreateSheet(
                             title: "Import students",
-                            subTitle: "Format: Name,Email,PassKey (one per line)",
-                            okText:"Import students",
+                            subTitle: "Format: Name,Email,PassKey",
+                            okText:"Import",
                             multiline: true,
                             onConfirm: importStudents,
                             onCancel: {
                                 self.addVisible = false
                             }
                         )
-                        .presentationDetents([.height(320)])
+                        .presentationDetents([.height(420)])
                         .presentationDragIndicator(.visible)
                     }
                 }
             }
-            .task {
-                await fetchStudents()
+            .onAppear {
+                if students.isEmpty {
+                    Task {
+                        await fetchStudents()
+                    }
+                }
             }
         }
     }

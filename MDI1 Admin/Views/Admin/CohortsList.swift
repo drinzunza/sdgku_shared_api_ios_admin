@@ -4,11 +4,10 @@ import Foundation
 struct CohortsList: View {
     @State private var cohorts: [Cohort] = []
     @State private var isLoading: Bool = false
-    @State private var errorMessage: String?
     @State private var showAdminSettings: Bool = false
     @State private var showCreateCohort: Bool = false
-    @State private var newCohortName: String = ""
     @State private var isCreating: Bool = false
+    @State private var errorMessage: String? = nil
     
     var body: some View {
         NavigationStack {
@@ -46,7 +45,9 @@ struct CohortsList: View {
                     .listStyle(.plain)
                     .padding(10)
                     .refreshable {
-                        await fetchCohorts()
+                        Task {
+                            await fetchCohorts()
+                        }
                     }
                 }
             }
@@ -71,58 +72,27 @@ struct CohortsList: View {
                 AppSettings()
             }
             .sheet(isPresented: $showCreateCohort) {
-                createCohortSheet
-            }
-            .task {
-                await fetchCohorts()
-            }
-        }
-    }
-    
-    // MARK: - Create Cohort Sheet
-    
-    private var createCohortSheet: some View {
-        NavigationStack {
-            Form {
-                Section(header: Text("Cohort Information")) {
-                    TextField("Cohort Name", text: $newCohortName)
-                        .textFieldStyle(.roundedBorder)
-                }
-                
-                if let error = errorMessage {
-                    Section {
-                        Text(error)
-                            .foregroundColor(.red)
-                            .font(.caption)
-                    }
-                }
-            }
-            .navigationTitle("New Cohort")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        showCreateCohort = false
-                        newCohortName = ""
-                        errorMessage = nil
-                    }
-                    .disabled(isCreating)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                CreateSheet(
+                    title: "New Cohort",
+                    subTitle: "Cohort name",
+                    okText: "Save",
+                    isLoading: isCreating,
+                    errorMessage: errorMessage,
+                    onConfirm: { text in
                         Task {
-                            await saveCohort()
+                            await saveCohort(text)
                         }
+                    },
+                    onCancel: {
+                        self.showCreateCohort = false
                     }
-                    .disabled(newCohortName.isEmpty || isCreating)
-                }
+                )
             }
-            .overlay {
-                if isCreating {
-                    ProgressView("Creating cohort...")
-                        .padding()
-                        .background(Color(.lightGray))
-                        .cornerRadius(10)
-                        .shadow(radius: 10)
+            .onAppear {
+                if cohorts.isEmpty {
+                    Task {
+                        await fetchCohorts()
+                    }
                 }
             }
         }
@@ -136,14 +106,16 @@ struct CohortsList: View {
         
         do {
             cohorts = try await CohortService.getAllCohorts()
+            print("Retrieved \(cohorts.count) cohorts")
             isLoading = false
         } catch {
+            print("Error fetching cohorts: \(error)")
             errorMessage = error.localizedDescription
             isLoading = false
         }
     }
     
-    private func saveCohort() async {
+    private func saveCohort(_ newCohortName: String) async {
         isCreating = true
         errorMessage = nil
         
@@ -156,10 +128,10 @@ struct CohortsList: View {
             cohorts.sort { $0.name < $1.name }
             
             // Reset and close
-            newCohortName = ""
             showCreateCohort = false
             isCreating = false
         } catch {
+            print("Error saving cohort: \(error)")
             errorMessage = error.localizedDescription
             isCreating = false
         }
