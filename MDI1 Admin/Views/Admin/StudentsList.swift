@@ -89,7 +89,7 @@ struct StudentsList: View {
         errorMessage = nil
         
         do {
-            students = try await DataService.getStudentsByCohort(cohort: cohort.name)
+            students = try await StudentService.getStudentsByCohort(cohort: cohort.name)
             isLoading = false
         } catch {
             errorMessage = error.localizedDescription
@@ -126,7 +126,7 @@ struct StudentsList: View {
                     let student = Student(fullName: fullName, cohort: self.cohort.name, email: email, passKey: passKey)
                     
                     // Create student via API
-                    let _ = try await DataService.createStudent(student: student)
+                    let _ = try await StudentService.createStudent(student: student)
                 }
                 
                 // Refresh the list after import

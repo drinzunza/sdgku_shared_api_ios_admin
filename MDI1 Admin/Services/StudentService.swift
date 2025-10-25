@@ -1,6 +1,6 @@
 import Foundation
 
-struct DataService {
+struct StudentService {
     
     // MARK: - Student API Methods
     

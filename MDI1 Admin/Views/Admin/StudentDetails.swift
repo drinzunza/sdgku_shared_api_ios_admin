@@ -137,7 +137,7 @@ struct StudentDetails: View {
                 var updatedEntities = student.allowedEntities
                 updatedEntities.append(entityName)
                 
-                let updatedStudent = try await DataService.updateStudentEntities(id: studentId, entities: updatedEntities)
+                let updatedStudent = try await StudentService.updateStudentEntities(id: studentId, entities: updatedEntities)
                 student = updatedStudent
                 onStudentUpdated?(updatedStudent)
                 self.addVisible = false
@@ -159,7 +159,7 @@ struct StudentDetails: View {
                 var updatedEntities = student.allowedEntities
                 updatedEntities.remove(atOffsets: offsets)
                 
-                let updatedStudent = try await DataService.updateStudentEntities(id: studentId, entities: updatedEntities)
+                let updatedStudent = try await StudentService.updateStudentEntities(id: studentId, entities: updatedEntities)
                 student = updatedStudent
                 onStudentUpdated?(updatedStudent)
             } catch {
